@@ -1,0 +1,52 @@
+SPFile fileSource = itmSource.File;
+SPUser userCreatedBy = fileSource.Author;
+DateTime dateCreatedOn = fileSource.TimeCreated.ToLocalTime();
+int countVersions = itmSource.File.Versions.Count;
+for (int i = 0; i <= countVersions; i++)
+{
+   Hashtable hashSourceProp;
+   Stream streamFile;
+   SPUser userModifiedBy;
+   DateTime dateModifiedOn;
+   string strVerComment = "";
+   bool bolMajorVer = false;
+   if (i < countVersions)
+   {
+      SPFileVersion fileSourceVer = itmSource.File.Versions[i];
+      hashSourceProp = fileSourceVer.Properties;
+      userModifiedBy = (i == 0) ? userCreatedBy: fileSourceVer.CreatedBy;
+      dateModifiedOn = fileSourceVer.Created.ToLocalTime();
+      strVerComment = fileSourceVer.CheckInComment;
+      bolMajorVer = fileSourceVer.VersionLabel.EndsWith("0") ? true : false;
+      streamFile = fileSourceVer.OpenBinaryStream();
+   }
+   else
+   {
+      userModifiedBy = fileSource.ModifiedBy;
+      dateModifiedOn = fileSource.TimeLastModified;
+      hashSourceProp = fileSource.Properties;
+      strVerComment = fileSource.CheckInComment;
+      bolMajorVer = fileSource.MinorVersion == 0 ? true : false;
+      streamFile = fileSource.OpenBinaryStream();
+   }
+   string urlDestFile = libDest.RootFolder.Url + "/" + fileSource.Name;
+   SPFile fileDest = libDest.RootFolder.Files.Add(
+       urlDestFile, 
+       streamFile, 
+       hashSourceProp, 
+       userCreatedBy, 
+       userModifiedBy, 
+       dateCreatedOn, 
+       dateModifiedOn, 
+       strVerComment, 
+       true);
+   if (bolMajorVer)
+        fileDest.Publish(strVerComment);
+   else
+   {
+      SPListItem itmNewVersion = fileDest.Item;
+      itmNewVersion["Created"] = dateCreatedOn;
+      itmNewVersion["Modified"] = dateModifiedOn;
+      itmNewVersion.UpdateOverwriteVersion();
+   }
+}
