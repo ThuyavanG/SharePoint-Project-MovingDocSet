@@ -1,0 +1,69 @@
+using (site = new SPSite("http://sp/sites/team/t1"))
+
+{
+
+    using (web = site.OpenWeb())
+
+    {
+
+        SPList list = web.Lists["doc01"];
+
+        foreach (SPListItem item in list.Items)
+
+        {
+
+            if (item.Folder != null)
+
+            {
+
+                SPListItem sourceItem = list.Folders[0];
+
+                Console.WriteLine("item.folder:"+item.Folder);
+
+                DocumentSet newDocset = DocumentSet.GetDocumentSet(item.Folder);
+
+                if (newDocset != null)
+
+                {
+
+                    byte[] compressedFile = newDocset.Export();
+
+                    string docsetname = newDocset.Item.Name;
+
+                    Console.WriteLine("Export:" + docsetname);
+
+                    //Then we get the target list
+
+                    SPSite targetSite = new SPSite("http://sp/sites/team/t2");
+
+                    SPWeb targetWeb = targetSite.OpenWeb();
+
+                    SPList targetList = targetWeb.Lists["docA"];
+
+                    SPContentTypeId secondCt = targetList.ContentTypes["Document Set"].Id;
+
+                    Hashtable properties = sourceItem.Properties;
+
+                    //properties.Add("DocumentSetDescription", "New Document Set");//Populate the properties
+
+                    //DocumentSet newDocset = DocumentSet.Create(folder, "Docset1", docsetCT.Id, properties, true);
+
+                    SPFolder targetFolder = targetList.RootFolder;
+
+                    DocumentSet.Import(compressedFile, item.Name + "Backup", targetFolder, secondCt,properties, web.CurrentUser);
+
+                                   
+
+                }
+
+            }
+
+        }
+
+        web.Close();
+
+    }
+
+    Console.ReadLine();
+
+}
