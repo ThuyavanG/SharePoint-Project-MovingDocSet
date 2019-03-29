@@ -1,0 +1,24 @@
+function getListItems(webUrl,listTitle, queryText) 
+{
+    var viewXml = '<View><Query>' + queryText + '</Query></View>';
+    var url = webUrl + "/_api/web/lists/getbytitle('" + listTitle + "')/getitems"; 
+    var queryPayload = {  
+               'query' : {
+                      '__metadata': { 'type': 'SP.CamlQuery' }, 
+                      'ViewXml' : viewXml  
+               }
+    };
+    return executeJson(url,"POST",null,queryPayload);
+}
+
+
+function getListViewItems(webUrl,listTitle,viewTitle)
+{
+     var url = webUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Views/getbytitle('" + viewTitle + "')/ViewQuery";
+     return executeJson(url).then(
+         function(data){         
+             var viewQuery = data.d.ViewQuery;
+             return getListItems(webUrl,listTitle,viewQuery); 
+         });
+}
+
