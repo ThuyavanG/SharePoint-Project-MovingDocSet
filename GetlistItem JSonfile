@@ -1,0 +1,20 @@
+function executeJson(url,method,headers,payload) 
+{
+    method = method || 'GET';
+    headers = headers || {};
+    headers["Accept"] = "application/json;odata=verbose";
+    if(method == "POST") {
+        headers["X-RequestDigest"] = $("#__REQUESTDIGEST").val();
+    }      
+    var ajaxOptions = 
+    {       
+       url: url,   
+       type: method,  
+       contentType: "application/json;odata=verbose",
+       headers: headers
+    };
+    if (typeof payload != 'undefined') {
+      ajaxOptions.data = JSON.stringify(payload);
+    }  
+    return $.ajax(ajaxOptions);
+}
